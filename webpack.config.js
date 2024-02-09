@@ -4,7 +4,7 @@ module.exports = {
   entry: './src/index.ts',
   mode: 'production',
 
- devtool: 'inline-source-map',
+  devtool: 'inline-source-map',
   module: {
     rules: [
       {
@@ -12,10 +12,16 @@ module.exports = {
         use: 'ts-loader',
         exclude: /node_modules/,
       },
+      {
+        test: /\.(js|ts)$/,
+        enforce: 'pre',
+        use: ['eslint-loader'],
+        exclude: /node_modules/,
+      },
     ],
   },
   resolve: {
-    extensions: [ '.ts', '.js' ],
+    extensions: ['.ts', '.js'],
   },
   output: {
     filename: 'bundle.js',
