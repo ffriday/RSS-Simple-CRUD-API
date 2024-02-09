@@ -6,7 +6,8 @@
     "module": "commonjs",
     "target": "es5",
     "allowJs": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "esModuleInterop": true
   },
   "include": ["./src/**/*", "./src/*", ".*ts", ".eslintrc.js"],
   "exclude": ["node_modules"]

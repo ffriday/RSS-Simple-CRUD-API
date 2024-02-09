@@ -1,0 +1,1 @@
+export const isClusterMode = (): boolean => process.argv.filter((arg) => arg === '--multi').length > 0;
