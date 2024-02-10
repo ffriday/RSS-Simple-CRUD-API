@@ -1,3 +1,3 @@
-import { isClusterMode } from './getClusterMode';
+import { parseEnv } from './parseEnv';
 
-export { isClusterMode };
+export { parseEnv };

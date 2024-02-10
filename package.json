@@ -7,6 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon --exec ts-node-dev src/index.ts",
+    "start:log": "nodemon --exec ts-node-dev src/index.ts --log",
     "start:multi": "nodemon --exec ts-node-dev src/index.ts --multi",
     "build": "webpack",
     "start:prod": "npm run build && node dist/bundle.js",
