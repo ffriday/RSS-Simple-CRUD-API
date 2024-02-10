@@ -9,20 +9,36 @@ export type UserBody = {
 export type User = UserBody & { id: string };
 
 type DB = {
-  add: (user: UserBody) => User;
+  post: (user: UserBody) => User;
   getAll: () => User[];
+  get: (userId: string) => User | null;
+  put: (user: User) => User | null;
 }
 
 export class ServerDB implements DB {
   private _data: User[] = [];
 
-  public add(user: UserBody) {
+  public post(user: UserBody): User {
     const newUser = { ...user, id: uuidv4() }
     this._data.push(newUser);
     return newUser;
   }
 
-  public getAll() {
+  public put(user: User): User | null {
+    const existingUser = this._data.find(({ id }) => id === user.id);
+    if(!existingUser) return null;
+    existingUser.username = user.username;
+    existingUser.age = user.age
+    existingUser.hobbies = user.hobbies;
+    return existingUser;
+  }
+
+  public getAll(): User[] {
     return this._data;
+  }
+
+  public get(userId: string): User | null {
+    const user = this._data.find(({ id }) => id === userId);
+    return user ?? null;
   }
 }
