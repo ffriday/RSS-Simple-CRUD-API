@@ -68,6 +68,11 @@ export class MyServer {
           return { status: 200, response: this._db.getAll() };
         }
         break;
+      case 'DELETE': {
+        const res = this._db.delete(path[2])
+        if (res) return { status: 204, response: null };
+        return { status: 404, response: systemMsg.wrongId };
+      }
     }
 
     console.log(this._db.getAll()); // REMOVE

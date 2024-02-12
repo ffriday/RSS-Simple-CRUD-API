@@ -13,6 +13,7 @@ export type DB = {
   getAll: () => User[];
   get: (userId: string) => User | null;
   put: (user: User) => User | null;
+  delete: (userId: string) => boolean;
 }
 
 export class ServerDB implements DB {
@@ -40,5 +41,14 @@ export class ServerDB implements DB {
   public get(userId: string): User | null {
     const user = this._data.find(({ id }) => id === userId);
     return user ?? null;
+  }
+
+  public delete(userId: string): boolean {
+    const user = this._data.find(({ id }) => id === userId);
+    if (user) {
+      this._data = this._data.filter(({id}) => id !== user.id);
+      return true;
+    }
+    return false;
   }
 }
