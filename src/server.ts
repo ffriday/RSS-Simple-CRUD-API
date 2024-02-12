@@ -1,7 +1,9 @@
 import { createServer, IncomingMessage } from 'node:http';
 import { parse } from 'node:url';
+// import cluster from 'node:cluster';
 import { validate } from 'uuid';
 import { DB, User, UserBody } from './db';
+// import { dataMsg } from './balancer';
 
 enum systemMsg {
   notFound = 'Page not found',
@@ -33,6 +35,18 @@ export class MyServer {
       res.end();
     });
     this._server.listen(this._port);
+
+    // cluster.on('message', async (worker, data: dataMsg) => {
+    //   console.log(data.payload);
+    //   if (data.type === 'connection') {
+    //     const {req, res} = data.payload;
+    //     const { status, response } = await this.handle(req);
+    //     res.writeHead(status, { 'Content-Type': 'application/json' });
+    //     res.write(JSON.stringify(response));
+    //     res.end();
+    //   }
+    // });
+
     process.on('SIGINT', () => {
       console.log('Server is shutting down');
       this._server.close(() => {
@@ -90,9 +104,6 @@ export class MyServer {
       default:
         return { status: 405, response: systemMsg.wrognMethod };
     }
-
-    console.log(this._db.getAll()); // REMOVE
-    return { status: 200, response: 'ok' };
   }
 
   private log({ url, method }: IncomingMessage) {

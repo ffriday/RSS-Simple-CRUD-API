@@ -1,34 +1,50 @@
-// import { createServer, IncomingMessage } from 'node:http';
-// import { parse } from 'node:url';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { IncomingMessage, createServer, ServerResponse } from 'node:http';
+import { Worker } from 'node:cluster';
+import { parse } from 'node:url';
+import { DB } from './db';
 
-// export class MyBalancer {
-//   private _log: boolean;
-//   private _port: number;
-//   private _server: ReturnType<typeof createServer>;
-//   private _workers: Worker[];
+export type dataMsg = {
+  type: 'connection',
+  payload: {
+    req: IncomingMessage,
+    res: ServerResponse,
+  }
+}
 
-//   constructor(port: number, log: boolean = false) {
-//     this._log = log;
-//     this._port = port;
-//     this.init();
-//   }
+export class MyBalancer {
+  private _port: number;
+  private _server: ReturnType<typeof createServer>;
+  private _workers: Worker[];
+  private _db: DB;
+  private _current = 0;
 
-//   private init() {
-//     this._server = createServer((req, res) => {
-//     });
-//     this._server.listen(this._port);
-//     process.on('SIGINT', () => {
-//       console.log('Server is shutting down');
-//       this._server.close(() => {
-//         process.exit(0);
-//       });
-//     })
-//   }
+  constructor(port: number, db: DB, workers: Worker[]) {
+    this._port = port;
+    this._db = db;
+    this._workers = workers;
+    this.init();
+  }
 
-//   private handle(req: IncomingMessage) {
-//     this.log(req);
-//     const path = parse(req.url, true).pathname.split('/').filter(Boolean);
-//     if (!MyServer.isProperUrl(path)) return { status: 404, response: errorMsg.notFound };
-//     return { status: 200, response: 'ok' };
-//   }
-// }
+  private init() {
+    this._server = createServer((req, res) => {
+      this._workers[this._current].send({ type: 'connection', payload: {req, res} });
+      this.next();
+    });
+    this._server.listen(this._port);
+    process.on('SIGINT', () => {
+      console.log('Server is shutting down');
+      this._server.close(() => {
+        process.exit(0);
+      });
+    })
+  }
+
+  private next() {
+    if (this._current < this._workers.length - 1) {
+      this._current++;
+    } else {
+      this._current = 0;
+    }
+  }
+}
