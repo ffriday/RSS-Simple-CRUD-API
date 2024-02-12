@@ -8,7 +8,7 @@ export type UserBody = {
 
 export type User = UserBody & { id: string };
 
-type DB = {
+export type DB = {
   post: (user: UserBody) => User;
   getAll: () => User[];
   get: (userId: string) => User | null;

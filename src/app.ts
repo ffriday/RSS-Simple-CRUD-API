@@ -2,6 +2,7 @@ import { parseEnv } from './functions';
 import cluster from 'node:cluster';
 import { availableParallelism } from 'node:os';
 import { MyServer } from './server';
+import { DB, ServerDB } from './db';
 
 export class App {
   private _port: number;
@@ -9,6 +10,7 @@ export class App {
   private _isLogMode = parseEnv('log');
   private _parralel = availableParallelism();
   private _server: MyServer;
+  private _db: DB;
 
   constructor(port: number) {
     this._port = port ?? 4000;
@@ -30,10 +32,12 @@ export class App {
         workers.find(e => e);
       } else {
         this.logStart('Worker', this._port);
+        // this._server = new MyServer(this._port, this._isLogMode);
       }
     } else {
       this.logStart('Server', this._port);
+      this._db = new ServerDB();
+      this._server = new MyServer(this._port, this._db, this._isLogMode);
     }
-    this._server = new MyServer(this._port, this._isLogMode);
   }
 }

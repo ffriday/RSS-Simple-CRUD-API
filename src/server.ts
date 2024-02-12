@@ -1,24 +1,29 @@
 import { createServer, IncomingMessage } from 'node:http';
 import { parse } from 'node:url';
+import { validate } from 'uuid';
+import { DB, UserBody } from './db';
 
-enum errorMsg {
+enum systemMsg {
   notFound = 'Page not found',
+  novValidId = 'User ID is not valid format',
 }
 
 export class MyServer {
   private _log: boolean;
   private _port: number;
   private _server: ReturnType<typeof createServer>;
+  private _db: DB;
 
-  constructor(port: number, log: boolean = false) {
+  constructor(port: number, db: DB, log: boolean = false) {
     this._log = log;
     this._port = port;
+    this._db = db;
     this.init();
   }
 
-  private init() {
-    this._server = createServer((req, res) => {
-      const { status, response } = this.handle(req);
+  private async init() {
+    this._server = createServer(async (req, res) => {
+      const { status, response } = await this.handle(req);
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.write(JSON.stringify(response));
       res.end();
@@ -32,10 +37,25 @@ export class MyServer {
     })
   }
 
-  private handle(req: IncomingMessage) {
+  private async handle(req: IncomingMessage) {
     this.log(req);
     const path = parse(req.url, true).pathname.split('/').filter(Boolean);
-    if (!MyServer.isProperUrl(path)) return { status: 404, response: errorMsg.notFound };
+    console.log(path);
+    if (!MyServer.isProperUrl(path)) return { status: 404, response: systemMsg.notFound };
+    if (path[2] && !validate(path[2])) return { status: 400, response: systemMsg.novValidId };
+
+    switch(req.method) {
+      case 'POST':
+        try {
+          const body = await MyServer.getBody(req);
+          console.log(body);
+        } catch (err) {
+          console.log(err);
+        }
+        break;
+    }
+
+    console.log(this._db.getAll());
     return { status: 200, response: 'ok' };
   }
 
@@ -50,4 +70,27 @@ export class MyServer {
     if (!(path[0] === 'api' && path[1] === 'users')) return false;
     return true;
   }
+
+  private static getBody = async (req: IncomingMessage): Promise<UserBody | null> => {
+    return new Promise((resolve, reject) => {
+      const body: string[] = [];
+
+      req.on('data', (chunk: string) => body.push(chunk.toString()));
+      req.on('end', () => {
+        try {
+          const parsedBody = JSON.parse(body.join(''));
+          resolve(parsedBody);
+        } catch {
+          reject(null);
+        }
+      });
+      req.on('error', () => reject(null));
+    });
+  }
+
+  // private static ckeckUser (user: Partial<User>, id: boolean = false): boolean {
+  //   const kays = ['username',]
+  // }
+
+  // private static handlePUT = ()
 }
