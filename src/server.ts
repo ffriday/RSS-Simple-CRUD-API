@@ -1,11 +1,12 @@
 import { createServer, IncomingMessage } from 'node:http';
 import { parse } from 'node:url';
 import { validate } from 'uuid';
-import { DB, UserBody } from './db';
+import { DB, User, UserBody } from './db';
 
 enum systemMsg {
   notFound = 'Page not found',
-  novValidId = 'User ID is not valid format',
+  notValidId = 'User ID is not valid format',
+  notValidBody = 'Wrong data format',
 }
 
 export class MyServer {
@@ -40,22 +41,22 @@ export class MyServer {
   private async handle(req: IncomingMessage) {
     this.log(req);
     const path = parse(req.url, true).pathname.split('/').filter(Boolean);
-    console.log(path);
     if (!MyServer.isProperUrl(path)) return { status: 404, response: systemMsg.notFound };
-    if (path[2] && !validate(path[2])) return { status: 400, response: systemMsg.novValidId };
+    if (path[2] && !validate(path[2])) return { status: 400, response: systemMsg.notValidId };
 
-    switch(req.method) {
+    switch (req.method) {
       case 'POST':
         try {
           const body = await MyServer.getBody(req);
-          console.log(body);
+          if (!MyServer.ckeckUser(body)) return { status: 400, response: systemMsg.notValidBody };
+          this._db.post(body);
         } catch (err) {
           console.log(err);
         }
         break;
     }
 
-    console.log(this._db.getAll());
+    console.log(this._db.getAll()); // REMOVE
     return { status: 200, response: 'ok' };
   }
 
@@ -88,9 +89,12 @@ export class MyServer {
     });
   }
 
-  // private static ckeckUser (user: Partial<User>, id: boolean = false): boolean {
-  //   const kays = ['username',]
-  // }
-
-  // private static handlePUT = ()
+  private static ckeckUser(user: Partial<User>, id: boolean = false): boolean {
+    const keys = ['username', 'age', 'hobbies'];
+    if (id) keys.push('id');
+    return keys.reduce((acc, key) => {
+      if (!(key in user)) acc = false;
+      return acc;
+    }, true)
+  }
 }
