@@ -9,6 +9,7 @@ enum systemMsg {
   wrongId = 'User ID does not exist',
   notValidBody = 'Wrong data format',
   serverError = 'Server error',
+  wrognMethod = 'Method not allowed',
 }
 
 export class MyServer {
@@ -73,6 +74,21 @@ export class MyServer {
         if (res) return { status: 204, response: null };
         return { status: 404, response: systemMsg.wrongId };
       }
+      case 'PUT':
+        try {
+          const body = await MyServer.getBody(req);
+          if (!path[2]) return { status: 404, response: systemMsg.notFound };
+          if (!MyServer.ckeckUser(body)) return { status: 400, response: systemMsg.notValidBody };
+          const user = this._db.put({id: path[2], ...body});
+          if (user) return { status: 201, response: user };
+          return { status: 404, response: systemMsg.notFound };
+        } catch (err) {
+          console.log(err);
+          return { status: 500, response: systemMsg.serverError };
+        }
+        break;
+      default:
+        return { status: 405, response: systemMsg.wrognMethod };
     }
 
     console.log(this._db.getAll()); // REMOVE
