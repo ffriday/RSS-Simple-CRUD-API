@@ -6,7 +6,9 @@ import { DB, User, UserBody } from './db';
 enum systemMsg {
   notFound = 'Page not found',
   notValidId = 'User ID is not valid format',
+  wrongId = 'User ID does not exist',
   notValidBody = 'Wrong data format',
+  serverError = 'Server error',
 }
 
 export class MyServer {
@@ -48,10 +50,22 @@ export class MyServer {
       case 'POST':
         try {
           const body = await MyServer.getBody(req);
+          if (path[2]) return { status: 400, response: systemMsg.notFound };
           if (!MyServer.ckeckUser(body)) return { status: 400, response: systemMsg.notValidBody };
-          this._db.post(body);
+          const user = this._db.post(body);
+          return { status: 201, response: user };
         } catch (err) {
           console.log(err);
+          return { status: 500, response: systemMsg.serverError };
+        }
+        break;
+      case 'GET':
+        if (path[2]) {
+          const user = this._db.get(path[2]);
+          if (user) return { status: 200, response: user };
+          return { status: 404, response: systemMsg.wrongId };
+        } else {
+          return { status: 200, response: this._db.getAll() };
         }
         break;
     }
