@@ -1,0 +1,1 @@
+export const parseEnv = (name: string): boolean => process.argv.filter((arg) => arg === `--${name}`).length > 0;
